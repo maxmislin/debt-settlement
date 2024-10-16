@@ -105,14 +105,18 @@ const DynamicDebts: React.FC = () => {
       <h2 className="text-lg font-semibold">Debts</h2>
       {debts.map((debt, index) => (
         <div
-          className="flex flex-col lg:flex-row lg:items-center gap-4 border-2 p-2 w-full lg:w-auto"
+          className="flex flex-col lg:flex-row lg:items-center gap-4 rounded-md p-3 w-full lg:w-auto"
+          style={{
+            border: "1px solid hsla(0,0%,18%,1)",
+            background: "#0a0a0a",
+          }}
           key={index}
         >
           <div className="flex flex-col lg:flex-row gap-2">
             <select
               value={debt.from}
               onChange={(e) => handleDebtChange(index, "from", e.target.value)}
-              className="p-2 rounded"
+              className="p-2 rounded-md h-10 border-r-4 border-x-white"
             >
               <option value="">Select Participant</option>
               {participants.map(
@@ -132,7 +136,7 @@ const DynamicDebts: React.FC = () => {
             <select
               value={debt.to}
               onChange={(e) => handleDebtChange(index, "to", e.target.value)}
-              className="p-2 rounded"
+              className="p-2 rounded-md border-r-4 border-x-white"
               disabled={!debt.from}
             >
               <option value="">Select Participant</option>
@@ -160,10 +164,10 @@ const DynamicDebts: React.FC = () => {
                 handleDebtChange(index, "amount", e.target.value)
               }
               placeholder="Amount in EUR"
-              className="p-2 rounded"
+              className="px-2 rounded-md h-10"
             />
             <button
-              className="bg-blue-500 text-white py-2 px-4 rounded disabled:opacity-50 flex-1"
+              className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 flex-1"
               onClick={removeDebt}
             >
               Remove
@@ -172,14 +176,14 @@ const DynamicDebts: React.FC = () => {
         </div>
       ))}
       <button
-        className="bg-blue-500 text-white py-2 px-4 rounded disabled:opacity-50 w-full lg:w-auto"
+        className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 disabled:hover:bg-black w-full lg:w-auto"
         onClick={addDebt}
         disabled={debts.length >= maxDebts}
       >
         Add Debt
       </button>
       <button
-        className="bg-green-600 text-white py-2 px-4 rounded disabled:opacity-50 w-full lg:w-auto"
+        className="bg-white text-black transition-opacity hover:opacity-80 rounded-md h-10 py-2 px-4 disabled:opacity-50 w-full lg:w-auto"
         onClick={createMatrix}
       >
         Settle Debts

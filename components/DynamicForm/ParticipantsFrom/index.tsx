@@ -9,6 +9,7 @@ const ParticipantsFrom: React.FC = () => {
   const addParticipant = () => {
     if (name === "") {
       alert("Name cannot be empty");
+      return;
     }
 
     const participantId = name.replace(/ /g, "_").toLowerCase();
@@ -31,11 +32,11 @@ const ParticipantsFrom: React.FC = () => {
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border p-2 mr-2 rounded w-3/5"
+          className="border px-2 mr-2 rounded-md w-3/5 h-10"
         />
         <button
           onClick={addParticipant}
-          className="bg-blue-500 text-white py-2 px-4 ml-2 rounded flex-1"
+          className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md py-2 h-10 px-4 ml-2 flex-1"
         >
           Add
         </button>
