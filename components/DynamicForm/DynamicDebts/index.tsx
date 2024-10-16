@@ -6,7 +6,7 @@ import { minimizeTransactions } from "@/utils/minimizeTransactions";
 type Debt = {
   from: string;
   to: string;
-  amount: number;
+  amount?: number;
 };
 
 const DynamicDebts: React.FC = () => {
@@ -17,7 +17,7 @@ const DynamicDebts: React.FC = () => {
 
   const addDebt = () => {
     if (debts.length < maxDebts) {
-      setDebts([...debts, { from: "", to: "", amount: 0 }]);
+      setDebts([...debts, { from: "", to: "" }]);
     }
   };
 
@@ -39,7 +39,7 @@ const DynamicDebts: React.FC = () => {
     for (const debt of debts) {
       const fromIndex = participants.findIndex((p) => p.id === debt.from);
       const toIndex = participants.findIndex((p) => p.id === debt.to);
-      const amount = parseFloat(debt.amount.toString());
+      const amount = debt.amount ? parseFloat(debt.amount.toString()) : 0;
 
       if (isNaN(amount) || amount <= 0) {
         alert(`Invalid amount for debt from ${debt.from} to ${debt.to}`);
@@ -136,7 +136,7 @@ const DynamicDebts: React.FC = () => {
             <select
               value={debt.to}
               onChange={(e) => handleDebtChange(index, "to", e.target.value)}
-              className="p-2 rounded-md border-r-4 border-x-white"
+              className="p-2 rounded-md border-r-4 h-10 border-x-white"
               disabled={!debt.from}
             >
               <option value="">Select Participant</option>
