@@ -7,15 +7,15 @@ import Loader from "../Loader";
 import Auth from "./Auth";
 
 const DynamicForm = () => {
-  const { participants, participantTransactions, isLoading } =
+  const { participants, participantTransactions, isLoading, isAuthenticated } =
     useParticipantContext();
-
-  if (!localStorage.getItem("password")) {
-    return <Auth />;
-  }
 
   if (isLoading) {
     return <Loader />;
+  }
+
+  if (!isAuthenticated) {
+    return <Auth />;
   }
 
   return (

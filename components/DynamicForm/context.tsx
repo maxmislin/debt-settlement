@@ -7,6 +7,10 @@ import React, {
   useCallback,
 } from "react";
 import { fetchAppData } from "@/query/appData";
+import {
+  getLocalStoragePassword,
+  setLocalStoragePassword,
+} from "@/utils/password";
 
 export type Participant = {
   id: string;
@@ -25,6 +29,7 @@ type ParticipantsContextType = {
   loadPrivateData: () => void;
   setPassword: (password: string) => void;
   password: string;
+  isAuthenticated: boolean;
 };
 
 export type ParticipantTransaction = {
@@ -43,17 +48,19 @@ const ParticipantsContext = createContext<ParticipantsContextType | undefined>(
   undefined
 );
 
+let isFetching = false;
+
 export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantTransactions, setParticipantTransactions] = useState<
     ParticipantTransaction[]
   >([]);
   const [debts, setDebts] = useState<Debt[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [password, setPassword] = useState(() => {
-    return localStorage.getItem("password") || "";
+    return getLocalStoragePassword() || "";
   });
-  const [isInitialDataLoaded, setDataLoaded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const addParticipant = (participant: Participant) => {
     setParticipants((prevParticipants) => [...prevParticipants, participant]);
@@ -66,11 +73,13 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loadPrivateData = useCallback(async () => {
-    if (isInitialDataLoaded) {
+    if (isAuthenticated || isFetching) {
       return;
     }
 
-    localStorage.setItem("password", password);
+    isFetching = true;
+
+    setLocalStoragePassword(password);
     setIsLoading(true);
     try {
       const data = await fetchAppData(password);
@@ -79,18 +88,20 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
         setDebts(data.debts);
         setParticipantTransactions(data.participantTransactions);
       }
-      setDataLoaded(true);
+      setIsAuthenticated(true);
     } catch (e) {
       console.error(e);
       alert("Failed to load data or wrong password");
-      localStorage.setItem("password", "");
+      setLocalStoragePassword(password);
     }
     setIsLoading(false);
-  }, [isInitialDataLoaded, password]);
+  }, [isAuthenticated, password]);
 
   useEffect(() => {
-    if (localStorage.getItem("password")) {
+    if (getLocalStoragePassword()) {
       loadPrivateData();
+    } else {
+      setIsLoading(false);
     }
   }, [loadPrivateData]);
 
@@ -108,6 +119,7 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
         loadPrivateData,
         password,
         setPassword,
+        isAuthenticated,
       }}
     >
       {children}
