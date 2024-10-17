@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+} from "react";
+import { fetchAppData } from "@/query/appData";
 
-type Participant = {
+export type Participant = {
   id: string;
   name: string;
 };
@@ -11,6 +19,12 @@ type ParticipantsContextType = {
   removeParticipant: (id: string) => void;
   participantTransactions: ParticipantTransaction[];
   setParticipantTransactions: (transactions: ParticipantTransaction[]) => void;
+  setDebts: (debts: Debt[]) => void;
+  debts: Debt[];
+  isLoading: boolean;
+  loadPrivateData: () => void;
+  setPassword: (password: string) => void;
+  password: string;
 };
 
 export type ParticipantTransaction = {
@@ -19,17 +33,27 @@ export type ParticipantTransaction = {
   amount: number;
 };
 
+export type Debt = {
+  from: string;
+  to: string;
+  amount?: number;
+};
+
 const ParticipantsContext = createContext<ParticipantsContextType | undefined>(
   undefined
 );
 
-export const ParticipantsProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantTransactions, setParticipantTransactions] = useState<
     ParticipantTransaction[]
   >([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState(() => {
+    return localStorage.getItem("password") || "";
+  });
+  const [isInitialDataLoaded, setDataLoaded] = useState(false);
 
   const addParticipant = (participant: Participant) => {
     setParticipants((prevParticipants) => [...prevParticipants, participant]);
@@ -41,6 +65,35 @@ export const ParticipantsProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
+  const loadPrivateData = useCallback(async () => {
+    if (isInitialDataLoaded) {
+      return;
+    }
+
+    localStorage.setItem("password", password);
+    setIsLoading(true);
+    try {
+      const data = await fetchAppData(password);
+      if (data) {
+        setParticipants(data.participants);
+        setDebts(data.debts);
+        setParticipantTransactions(data.participantTransactions);
+      }
+      setDataLoaded(true);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to load data or wrong password");
+      localStorage.setItem("password", "");
+    }
+    setIsLoading(false);
+  }, [isInitialDataLoaded, password]);
+
+  useEffect(() => {
+    if (localStorage.getItem("password")) {
+      loadPrivateData();
+    }
+  }, [loadPrivateData]);
+
   return (
     <ParticipantsContext.Provider
       value={{
@@ -49,6 +102,12 @@ export const ParticipantsProvider: React.FC<{ children: ReactNode }> = ({
         removeParticipant,
         participantTransactions,
         setParticipantTransactions,
+        debts,
+        setDebts,
+        isLoading,
+        loadPrivateData,
+        password,
+        setPassword,
       }}
     >
       {children}

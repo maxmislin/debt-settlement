@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useParticipantContext } from "../context";
 
 const ParticipantsFrom: React.FC = () => {
-  const { participants, addParticipant: setParticipants } =
-    useParticipantContext();
+  const {
+    participants,
+    addParticipant: setParticipants,
+    removeParticipant,
+  } = useParticipantContext();
   const [name, setName] = useState("");
 
   const addParticipant = () => {
@@ -45,6 +48,12 @@ const ParticipantsFrom: React.FC = () => {
         {participants.map((participant, index) => (
           <span key={index} className="mr-2">
             {participant.name}
+            <button
+              onClick={() => removeParticipant(participant.id)}
+              className="ml-2 text-red-500"
+            >
+              Remove
+            </button>
             {index < participants.length - 1 && ","}
           </span>
         ))}

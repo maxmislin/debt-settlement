@@ -3,9 +3,20 @@ import { ParticipantsProvider, useParticipantContext } from "./context";
 import ParticipantsForm from "./ParticipantsFrom";
 import DynamicDebts from "./DynamicDebts";
 import ParticipantTransactions from "./ParticipantTransactions";
+import Loader from "../Loader";
+import Auth from "./Auth";
 
-const DynamicForm: React.FC = () => {
-  const { participants, participantTransactions } = useParticipantContext();
+const DynamicForm = () => {
+  const { participants, participantTransactions, isLoading } =
+    useParticipantContext();
+
+  if (!localStorage.getItem("password")) {
+    return <Auth />;
+  }
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex flex-col flex-1 w-full">

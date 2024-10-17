@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParticipantContext } from "../context";
 import { minimizeCashFlow } from "@/utils/minimizeCashFlow";
 import { minimizeTransactions } from "@/utils/minimizeTransactions";
+import { updateAppData } from "@/query/appData";
 
 type Debt = {
   from: string;
@@ -10,8 +11,13 @@ type Debt = {
 };
 
 const DynamicDebts: React.FC = () => {
-  const { participants, setParticipantTransactions } = useParticipantContext();
-  const [debts, setDebts] = useState<Debt[]>([]);
+  const {
+    participants,
+    setParticipantTransactions,
+    debts,
+    setDebts,
+    password,
+  } = useParticipantContext();
 
   const maxDebts = participants.length * (participants.length - 1);
 
@@ -65,6 +71,14 @@ const DynamicDebts: React.FC = () => {
     });
 
     setParticipantTransactions(mappedTransactions);
+    updateAppData(
+      {
+        participantTransactions: mappedTransactions,
+        participants,
+        debts,
+      },
+      password
+    );
   };
 
   const removeDebt = () => {
