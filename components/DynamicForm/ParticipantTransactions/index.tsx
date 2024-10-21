@@ -9,8 +9,7 @@ const ParticipantTransactions: React.FC = () => {
       <ul>
         {participantTransactions.map((transaction, index) => (
           <li key={index}>
-            {transaction.creditor} should send{" "}
-            {transaction.amount.toFixed(2).toLocaleString()} to{" "}
+            {transaction.creditor} should send {transaction.amount} to{" "}
             {transaction.debtor}
           </li>
         ))}

@@ -15,9 +15,11 @@ type AppData = {
   participants: Participant[];
   participantTransactions: ParticipantTransaction[];
   payments: Payment[];
+  deletedParticipantIds: string[];
+  deletedPaymentIds: string[];
 };
 
-export const fetchAppData = async (password: string) => {
+export const fetchAppData = async (password: string): Promise<AppData> => {
   const itemId = CryptoJS.AES.decrypt(ENCRYPTED_ITEM_ID, password).toString(
     CryptoJS.enc.Utf8
   );

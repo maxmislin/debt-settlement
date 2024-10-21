@@ -30,12 +30,18 @@ type ParticipantsContextType = {
   setPassword: (password: string) => void;
   password: string;
   isAuthenticated: boolean;
+  setParticipants: (participants: Participant[]) => void;
+  deletedParticipantIds: string[];
+  setDeletedParticipantIds: (ids: string[]) => void;
+  deletedPaymentIds: string[];
+  setDeletedPaymentIds: (ids: string[]) => void;
 };
 
 export type ParticipantTransaction = {
   debtor: string;
   creditor: string;
-  amount: number;
+  amount: string;
+  id: string;
 };
 
 export type Payment = {
@@ -43,6 +49,7 @@ export type Payment = {
   amount: string;
   splitAmongAll: boolean;
   selectedParticipants: string[];
+  id: string;
 };
 
 const ParticipantsContext = createContext<ParticipantsContextType | undefined>(
@@ -62,12 +69,17 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
     return getLocalStoragePassword() || "";
   });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [deletedParticipantIds, setDeletedParticipantIds] = useState<string[]>(
+    []
+  );
+  const [deletedPaymentIds, setDeletedPaymentIds] = useState<string[]>([]);
 
   const addParticipant = (participant: Participant) => {
     setParticipants((prevParticipants) => [...prevParticipants, participant]);
   };
 
   const removeParticipant = (id: string) => {
+    setDeletedParticipantIds((prevDeletedIds) => [...prevDeletedIds, id]);
     setParticipants((prevParticipants) =>
       prevParticipants.filter((p) => p.id !== id)
     );
@@ -88,6 +100,8 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
         setParticipants(data.participants);
         setPayments(data.payments);
         setParticipantTransactions(data.participantTransactions);
+        setDeletedParticipantIds(data.deletedParticipantIds || []);
+        setDeletedPaymentIds(data.deletedPaymentIds || []);
       }
       setIsAuthenticated(true);
     } catch (e) {
@@ -121,6 +135,11 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
         password,
         setPassword,
         isAuthenticated,
+        setParticipants,
+        deletedParticipantIds,
+        setDeletedParticipantIds,
+        deletedPaymentIds,
+        setDeletedPaymentIds,
       }}
     >
       {children}
