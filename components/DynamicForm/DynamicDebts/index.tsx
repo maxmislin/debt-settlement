@@ -1,40 +1,48 @@
 import React from "react";
-import { useParticipantContext } from "../context";
+import { useParticipantContext, Payment } from "../context";
 import { minimizeCashFlow } from "@/utils/minimizeCashFlow";
 import { minimizeTransactions } from "@/utils/minimizeTransactions";
 import { updateAppData } from "@/query/appData";
-
-type Debt = {
-  from: string;
-  to: string;
-  amount?: number;
-};
 
 const DynamicDebts: React.FC = () => {
   const {
     participants,
     setParticipantTransactions,
-    debts,
-    setDebts,
     password,
+    payments,
+    setPayments,
   } = useParticipantContext();
 
-  const maxDebts = participants.length * (participants.length - 1);
-
-  const addDebt = () => {
-    if (debts.length < maxDebts) {
-      setDebts([...debts, { from: "", to: "" }]);
-    }
+  const addPayment = () => {
+    setPayments([
+      ...payments,
+      { payer: "", amount: "", splitAmongAll: true, selectedParticipants: [] },
+    ]);
   };
 
-  const handleDebtChange = (
+  const handlePaymentChange = (
     index: number,
-    field: keyof Debt,
-    value: string
+    field: keyof Payment,
+    value: string | boolean | number
   ) => {
-    const newDebts = debts.slice();
-    newDebts[index] = { ...newDebts[index], [field]: value };
-    setDebts(newDebts);
+    const newPayments = payments.slice();
+    newPayments[index] = { ...newPayments[index], [field]: value };
+    setPayments(newPayments);
+  };
+
+  const handleParticipantSelection = (
+    paymentIndex: number,
+    participantId: string
+  ) => {
+    const newPayments = payments.slice();
+    const selectedParticipants = newPayments[paymentIndex].selectedParticipants;
+    if (selectedParticipants.includes(participantId)) {
+      newPayments[paymentIndex].selectedParticipants =
+        selectedParticipants.filter((id) => id !== participantId);
+    } else {
+      newPayments[paymentIndex].selectedParticipants.push(participantId);
+    }
+    setPayments(newPayments);
   };
 
   const createMatrix = () => {
@@ -42,20 +50,32 @@ const DynamicDebts: React.FC = () => {
       .fill(0)
       .map(() => Array(participants.length).fill(0));
 
-    for (const debt of debts) {
-      const fromIndex = participants.findIndex((p) => p.id === debt.from);
-      const toIndex = participants.findIndex((p) => p.id === debt.to);
-      const amount = debt.amount ? parseFloat(debt.amount.toString()) : 0;
+    payments.forEach((payment) => {
+      const payerIndex = participants.findIndex(
+        (participant) => participant.id === payment.payer
+      );
+      const paymentAmount = parseFloat(payment.amount);
 
-      if (isNaN(amount) || amount <= 0) {
-        alert(`Invalid amount for debt from ${debt.from} to ${debt.to}`);
+      if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        alert(`Invalid amount for payment from ${payment.payer}`);
         return;
       }
 
-      if (fromIndex !== -1 && toIndex !== -1) {
-        matrix[fromIndex][toIndex] = amount;
-      }
-    }
+      const amountPerParticipant = payment.splitAmongAll
+        ? paymentAmount / participants.length
+        : paymentAmount / payment.selectedParticipants.length;
+
+      participants.forEach((payee, payeeIndex) => {
+        if (payerIndex !== payeeIndex) {
+          if (
+            payment.splitAmongAll ||
+            payment.selectedParticipants.includes(payee.id)
+          ) {
+            matrix[payeeIndex][payerIndex] += amountPerParticipant;
+          }
+        }
+      });
+    });
 
     const minCashFlow = minimizeCashFlow(matrix);
     const minimizedTransactions = minimizeTransactions(minCashFlow) || [];
@@ -71,53 +91,35 @@ const DynamicDebts: React.FC = () => {
     });
 
     setParticipantTransactions(mappedTransactions);
-    updateAppData(
-      {
-        participantTransactions: mappedTransactions,
-        participants,
-        debts,
-      },
-      password
-    );
-  };
+    try {
+      updateAppData(
+        {
+          participantTransactions: mappedTransactions,
+          participants,
+          payments,
+        },
+        password
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Error updating app data, message: ${error.message}`);
+        return;
+      }
 
-  const removeDebt = () => {
-    if (debts.length > 0) {
-      setDebts(debts.slice(0, debts.length - 1));
+      alert("Error updating app data");
     }
   };
 
-  const isAvailableFromParticipant = (id: string) => {
-    const maxUsage = Math.max(1, participants.length - 1);
-    const availableFromParticipants = participants.filter((participant) => {
-      const usageCount = debts.filter(
-        (debt) => debt.from === participant.id
-      ).length;
-      return usageCount < maxUsage;
-    });
-
-    return (
-      availableFromParticipants.findIndex(
-        (participant) => participant.id === id
-      ) === -1
-    );
-  };
-
-  const isAvailableToParticipant = (idFrom: string, id: string) => {
-    const usedParticipants = debts.reduce((acc: string[], debt) => {
-      if (debt.from === idFrom && debt.to) {
-        acc.push(debt.to);
-      }
-      return acc;
-    }, []);
-
-    return usedParticipants.includes(id);
+  const removePayment = (index: number) => {
+    if (payments.length > 0) {
+      setPayments(payments.filter((_, i) => i !== index));
+    }
   };
 
   return (
-    <div className="flex flex-col items-start  gap-4">
-      <h2 className="text-lg font-semibold">Debts</h2>
-      {debts.map((debt, index) => (
+    <div className="flex flex-col items-start gap-4">
+      <h2 className="text-lg font-semibold">Payments</h2>
+      {payments.map((payment, index) => (
         <div
           className="flex flex-col lg:flex-row lg:items-center gap-4 rounded-md p-3 w-full lg:w-auto"
           style={{
@@ -128,73 +130,70 @@ const DynamicDebts: React.FC = () => {
         >
           <div className="flex flex-col lg:flex-row gap-2">
             <select
-              value={debt.from}
-              onChange={(e) => handleDebtChange(index, "from", e.target.value)}
+              value={payment.payer}
+              onChange={(e) =>
+                handlePaymentChange(index, "payer", e.target.value)
+              }
               className="p-2 rounded-md h-10 border-r-4 border-x-white"
             >
               <option value="">Select Participant</option>
-              {participants.map(
-                (participant) =>
-                  debt.to !== participant.id && (
-                    <option
-                      key={participant.id}
-                      value={participant.id}
-                      disabled={isAvailableFromParticipant(participant.id)}
-                    >
-                      {participant.name}
-                    </option>
-                  )
-              )}
+              {participants.map((participant) => (
+                <option key={participant.id} value={participant.id}>
+                  {participant.name}
+                </option>
+              ))}
             </select>
-            <span className="flex items-center">owes</span>
-            <select
-              value={debt.to}
-              onChange={(e) => handleDebtChange(index, "to", e.target.value)}
-              className="p-2 rounded-md border-r-4 h-10 border-x-white"
-              disabled={!debt.from}
-            >
-              <option value="">Select Participant</option>
-              {participants.map(
-                (participant) =>
-                  debt.from !== participant.id && (
-                    <option
-                      key={participant.id}
-                      value={participant.id}
-                      disabled={isAvailableToParticipant(
-                        debt.from,
-                        participant.id
-                      )}
-                    >
-                      {participant.name}
-                    </option>
-                  )
-              )}
-            </select>
-          </div>
-          <div className="flex gap-2">
             <input
-              value={debt.amount}
+              type="text"
+              value={payment.amount}
               onChange={(e) =>
-                handleDebtChange(index, "amount", e.target.value)
+                handlePaymentChange(index, "amount", e.target.value)
               }
               placeholder="Amount in EUR"
-              className="px-2 rounded-md h-10"
+              className="p-2 rounded-md h-10"
             />
-            <button
-              className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 flex-1"
-              onClick={removeDebt}
-            >
-              Remove
-            </button>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={payment.splitAmongAll}
+                onChange={(e) =>
+                  handlePaymentChange(index, "splitAmongAll", e.target.checked)
+                }
+              />
+              Split among all participants
+            </label>
           </div>
+          {!payment.splitAmongAll && (
+            <div className="flex flex-wrap gap-2">
+              {participants.map((participant) => (
+                <label key={participant.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={payment.selectedParticipants.includes(
+                      participant.id
+                    )}
+                    onChange={() =>
+                      handleParticipantSelection(index, participant.id)
+                    }
+                  />
+                  {participant.name}
+                </label>
+              ))}
+            </div>
+          )}
+          <button
+            className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 flex-1"
+            onClick={() => removePayment(index)}
+          >
+            Remove
+          </button>
         </div>
       ))}
       <button
         className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 disabled:hover:bg-black w-full lg:w-auto"
-        onClick={addDebt}
-        disabled={debts.length >= maxDebts}
+        onClick={addPayment}
       >
-        Add Debt
+        Add Payment
       </button>
       <button
         className="bg-white text-black transition-opacity hover:opacity-80 rounded-md h-10 py-2 px-4 disabled:opacity-50 w-full lg:w-auto"

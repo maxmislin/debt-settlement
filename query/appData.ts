@@ -1,7 +1,7 @@
 import {
   type Participant,
   type ParticipantTransaction,
-  type Debt,
+  type Payment,
 } from "@/components/DynamicForm/context";
 import CryptoJS from "crypto-js";
 
@@ -14,7 +14,7 @@ const ENCRYPTED_ITEM_ID =
 type AppData = {
   participants: Participant[];
   participantTransactions: ParticipantTransaction[];
-  debts: Debt[];
+  payments: Payment[];
 };
 
 export const fetchAppData = async (password: string) => {

@@ -23,8 +23,8 @@ type ParticipantsContextType = {
   removeParticipant: (id: string) => void;
   participantTransactions: ParticipantTransaction[];
   setParticipantTransactions: (transactions: ParticipantTransaction[]) => void;
-  setDebts: (debts: Debt[]) => void;
-  debts: Debt[];
+  setPayments: (debts: Payment[]) => void;
+  payments: Payment[];
   isLoading: boolean;
   loadPrivateData: () => void;
   setPassword: (password: string) => void;
@@ -38,10 +38,11 @@ export type ParticipantTransaction = {
   amount: number;
 };
 
-export type Debt = {
-  from: string;
-  to: string;
-  amount?: number;
+export type Payment = {
+  payer: string;
+  amount: string;
+  splitAmongAll: boolean;
+  selectedParticipants: string[];
 };
 
 const ParticipantsContext = createContext<ParticipantsContextType | undefined>(
@@ -55,7 +56,7 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
   const [participantTransactions, setParticipantTransactions] = useState<
     ParticipantTransaction[]
   >([]);
-  const [debts, setDebts] = useState<Debt[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [password, setPassword] = useState(() => {
     return getLocalStoragePassword() || "";
@@ -85,7 +86,7 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
       const data = await fetchAppData(password);
       if (data) {
         setParticipants(data.participants);
-        setDebts(data.debts);
+        setPayments(data.payments);
         setParticipantTransactions(data.participantTransactions);
       }
       setIsAuthenticated(true);
@@ -113,8 +114,8 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
         removeParticipant,
         participantTransactions,
         setParticipantTransactions,
-        debts,
-        setDebts,
+        payments,
+        setPayments,
         isLoading,
         loadPrivateData,
         password,
