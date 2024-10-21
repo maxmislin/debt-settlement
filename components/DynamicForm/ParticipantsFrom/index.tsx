@@ -35,7 +35,7 @@ const ParticipantsFrom: React.FC = () => {
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border px-2 mr-2 rounded-md w-3/5 h-10"
+          className="border px-2 mr-2 rounded-md w-3/5 h-10 border-neutral-300 dark:border-gray-600"
         />
         <button
           onClick={addParticipant}

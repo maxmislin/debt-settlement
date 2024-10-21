@@ -10,10 +10,9 @@ const Auth: React.FC = () => {
       <div className="mb-4 flex">
         <input
           type="password"
-          placeholder="Name"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border px-2 mr-2 rounded-md w-3/5 h-10"
+          className="border px-2 mr-2 rounded-md w-3/5 h-10 border-neutral-300"
         />
         <button
           onClick={loadPrivateData}

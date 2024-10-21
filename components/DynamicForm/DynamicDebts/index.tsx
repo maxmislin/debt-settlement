@@ -170,68 +170,75 @@ const DynamicDebts: React.FC = () => {
       <h2 className="text-lg font-semibold">Payments</h2>
       {payments.map((payment, index) => (
         <div
-          className="flex flex-col lg:flex-row lg:items-center gap-4 rounded-md p-3 w-full lg:w-auto"
-          style={{
-            border: "1px solid hsla(0,0%,18%,1)",
-            background: "#0a0a0a",
-          }}
+          className="flex flex-col lg:flex-row lg:items-start gap-4 rounded-md p-3 w-full lg:w-auto bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700"
           key={index}
         >
-          <div className="flex flex-col lg:flex-row gap-2">
-            <select
-              value={payment.payer}
-              onChange={(e) =>
-                handlePaymentChange(index, "payer", e.target.value)
-              }
-              className="p-2 rounded-md h-10 border-r-4 border-x-white"
-            >
-              <option value="">Select Participant</option>
-              {participants.map((participant) => (
-                <option key={participant.id} value={participant.id}>
-                  {participant.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={payment.amount}
-              onChange={(e) =>
-                handlePaymentChange(index, "amount", e.target.value)
-              }
-              placeholder="Amount in EUR"
-              className="p-2 rounded-md h-10"
-            />
-            <label className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col lg:flex-row gap-2">
+              <div className="border border-neutral-300 rounded-md">
+                <select
+                  value={payment.payer}
+                  onChange={(e) =>
+                    handlePaymentChange(index, "payer", e.target.value)
+                  }
+                  className="p-2 rounded-md h-10 border-r-4 border-x-white w-full"
+                >
+                  <option value="">Select Participant</option>
+                  {participants.map((participant) => (
+                    <option key={participant.id} value={participant.id}>
+                      {participant.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <input
-                type="checkbox"
-                checked={payment.splitAmongAll}
+                type="text"
+                value={payment.amount}
                 onChange={(e) =>
-                  handlePaymentChange(index, "splitAmongAll", e.target.checked)
+                  handlePaymentChange(index, "amount", e.target.value)
                 }
+                placeholder="Amount in EUR"
+                className="p-2 rounded-md h-10 border border-neutral-300"
               />
-              Split among all participants
-            </label>
-          </div>
-          {!payment.splitAmongAll && (
-            <div className="flex flex-wrap gap-2">
-              {participants.map((participant) => (
-                <label key={participant.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={payment.selectedParticipants.includes(
-                      participant.id
-                    )}
-                    onChange={() =>
-                      handleParticipantSelection(index, participant.id)
-                    }
-                  />
-                  {participant.name}
-                </label>
-              ))}
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={payment.splitAmongAll}
+                  onChange={(e) =>
+                    handlePaymentChange(
+                      index,
+                      "splitAmongAll",
+                      e.target.checked
+                    )
+                  }
+                />
+                Split among all participants
+              </label>
             </div>
-          )}
+            {!payment.splitAmongAll && (
+              <div className="flex flex-wrap gap-2">
+                {participants.map((participant) => (
+                  <label
+                    key={participant.id}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={payment.selectedParticipants.includes(
+                        participant.id
+                      )}
+                      onChange={() =>
+                        handleParticipantSelection(index, participant.id)
+                      }
+                    />
+                    {participant.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <button
-            className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 flex-1"
+            className="bg-black border-gray-600 border transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 flex-1"
             onClick={() => removePayment(index)}
           >
             Remove
@@ -239,13 +246,13 @@ const DynamicDebts: React.FC = () => {
         </div>
       ))}
       <button
-        className="bg-black border-gray-600 border-2 transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 disabled:hover:bg-black w-full lg:w-auto"
+        className="bg-black border-gray-600 border transition-colors hover:bg-gray-600 text-white rounded-md h-10 py-2 px-4 disabled:opacity-50 disabled:hover:bg-black w-full lg:w-auto"
         onClick={addPayment}
       >
         Add Payment
       </button>
       <button
-        className="bg-white text-black transition-opacity hover:opacity-80 rounded-md h-10 py-2 px-4 disabled:opacity-50 w-full lg:w-auto"
+        className="bg-white text-black transition-opacity hover:opacity-80 rounded-md h-10 py-2 px-4 disabled:opacity-50 w-full lg:w-auto border-black border"
         onClick={createMatrix}
         disabled={isLoading}
       >

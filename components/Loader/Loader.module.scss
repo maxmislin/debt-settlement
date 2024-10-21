@@ -13,7 +13,7 @@
 .loader:before,
 .loader:after {
   content: "";
-  --c: no-repeat linear-gradient(#fff 0 0);
+  --c: no-repeat linear-gradient(var(--foreground) 0 0);
   background: var(--c), var(--c);
   background-size: 25% 50%;
   animation: l5 1.5s infinite linear;
