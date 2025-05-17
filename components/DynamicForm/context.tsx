@@ -50,6 +50,7 @@ export type Payment = {
   splitAmongAll: boolean;
   selectedParticipants: string[];
   id: string;
+  description: string;
 };
 
 const ParticipantsContext = createContext<ParticipantsContextType | undefined>(

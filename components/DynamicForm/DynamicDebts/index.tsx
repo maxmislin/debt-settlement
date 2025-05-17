@@ -27,6 +27,7 @@ const DynamicDebts: React.FC = () => {
         splitAmongAll: true,
         selectedParticipants: [],
         id: `payment-${Date.now()}`,
+        description: "",
       },
     ]);
   };
@@ -64,9 +65,13 @@ const DynamicDebts: React.FC = () => {
       const filteredParticipants = refetchData.participants.filter(
         (participant) => !deletedParticipantIds.includes(participant.id)
       );
-      const filteredPayments = refetchData.payments.filter(
-        (payment) => !deletedPaymentIds.includes(payment.id)
-      );
+      const filteredPayments = refetchData.payments.filter((refetched) => {
+        const payment = payments.find((p) => p.id === refetched.id);
+        return (
+          !deletedPaymentIds.includes(refetched.id) ||
+          JSON.stringify(payment) === JSON.stringify(refetched)
+        );
+      });
 
       const participantsDiff = participants.filter(
         (participant) =>
@@ -198,6 +203,15 @@ const DynamicDebts: React.FC = () => {
                   handlePaymentChange(index, "amount", e.target.value)
                 }
                 placeholder="Amount in EUR"
+                className="p-2 rounded-md h-10 border border-neutral-300"
+              />
+              <input
+                type="text"
+                value={payment.description}
+                onChange={(e) =>
+                  handlePaymentChange(index, "description", e.target.value)
+                }
+                placeholder="Description"
                 className="p-2 rounded-md h-10 border border-neutral-300"
               />
               <label className="flex items-center gap-2">
