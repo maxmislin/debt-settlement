@@ -67,8 +67,13 @@ const DynamicDebts: React.FC = () => {
       );
       const filteredPayments = refetchData.payments.filter((refetched) => {
         const payment = payments.find((p) => p.id === refetched.id);
+
+        if (JSON.stringify(payment) !== JSON.stringify(refetched)) {
+          console.log("Payment changed", payment, refetched);
+        }
+
         return (
-          !deletedPaymentIds.includes(refetched.id) ||
+          !deletedPaymentIds.includes(refetched.id) &&
           JSON.stringify(payment) === JSON.stringify(refetched)
         );
       });
