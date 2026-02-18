@@ -7,6 +7,7 @@ import {
 } from "@/query/appData";
 import { useAppContext } from "@/app/context";
 import { useParticipantContext } from "../context";
+import { useRouter } from "next/navigation";
 
 const ActionButtons = ({ currentItem }: { currentItem: string }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -14,6 +15,7 @@ const ActionButtons = ({ currentItem }: { currentItem: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { password, setCurrentItem, items, setItems } = useAppContext();
   const { loadItemData } = useParticipantContext();
+  const router = useRouter();
 
   const onReset = async () => {
     setIsLoading(true);
@@ -49,6 +51,9 @@ const ActionButtons = ({ currentItem }: { currentItem: string }) => {
       await deleteItem(currentItem, password);
 
       setCurrentItem(null);
+
+      // Clear search params after delete
+      router.replace(window.location.pathname);
     } catch (e) {
       console.error(e);
       alert("Failed to reset item");
