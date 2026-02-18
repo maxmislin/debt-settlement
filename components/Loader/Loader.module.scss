@@ -1,9 +1,19 @@
 /* HTML: <div class="loader"></div> */
 
 .loaderContainer {
-  position: fixed;
-  right: calc(50% - 40px);
-  top: calc(50% - 40px);
+  /* Remove fixed positioning */
+  position: relative;
+  right: unset;
+  top: unset;
+
+  /* Take full area of parent */
+  width: 100%;
+  height: 100vh;
+
+  /* Center loader */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .loader {
   height: 80px;

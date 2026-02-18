@@ -15,7 +15,7 @@ const ParticipantsFrom: React.FC = () => {
       return;
     }
 
-    const participantId = name.replace(/ /g, "_").toLowerCase();
+    const participantId = `${name.replace(/ /g, "_").toLowerCase()}-${Date.now()}`;
 
     if (participants.some((p) => p.id === participantId)) {
       alert(`Participant ${name} already exists`);
@@ -27,8 +27,8 @@ const ParticipantsFrom: React.FC = () => {
   };
 
   return (
-    <div className="py-4 flex flex-col flex-1 lg:w-96">
-      <h2 className="text-2xl font-bold mb-4">Add Participants</h2>
+    <div className="py-4 flex flex-col flex-1 lg:max-w-96">
+      <h2 className="text-xl font-bold mb-4">Add Participants</h2>
       <div className="mb-4 flex">
         <input
           type="text"
@@ -45,7 +45,7 @@ const ParticipantsFrom: React.FC = () => {
         </button>
       </div>
       <div>
-        {participants.map((participant, index) => (
+        {participants?.map((participant, index) => (
           <span key={index} className="mr-2">
             {participant.name}
             <button
