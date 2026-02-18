@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import { useParticipantContext, Payment } from "../context";
 import { minimizeCashFlow } from "@/utils/minimizeCashFlow";
 import { minimizeTransactions } from "@/utils/minimizeTransactions";
-import { updateAppData, fetchAppData } from "@/query/appData";
+import { updateItemData, fetchItemData } from "@/query/appData";
+import { filterOldPaymentsOrParticipants } from "@/utils/filterOldPayments";
+import { useAppContext } from "@/app/context";
 
-const DynamicDebts: React.FC = () => {
+type DynamicDebtsProps = {
+  currentItem: string;
+};
+
+const DynamicDebts: React.FC<DynamicDebtsProps> = ({ currentItem }) => {
   const {
     participants,
     setParticipantTransactions,
-    password,
     payments,
     setParticipants,
     setPayments,
@@ -16,6 +21,7 @@ const DynamicDebts: React.FC = () => {
     deletedPaymentIds,
     setDeletedPaymentIds,
   } = useParticipantContext();
+  const { password } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const addPayment = () => {
@@ -35,7 +41,7 @@ const DynamicDebts: React.FC = () => {
   const handlePaymentChange = (
     index: number,
     field: keyof Payment,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => {
     const newPayments = payments.slice();
     newPayments[index] = { ...newPayments[index], [field]: value };
@@ -44,7 +50,7 @@ const DynamicDebts: React.FC = () => {
 
   const handleParticipantSelection = (
     paymentIndex: number,
-    participantId: string
+    participantId: string,
   ) => {
     const newPayments = payments.slice();
     const selectedParticipants = newPayments[paymentIndex].selectedParticipants;
@@ -60,17 +66,13 @@ const DynamicDebts: React.FC = () => {
   const createMatrix = async () => {
     setIsLoading(true);
     try {
-      const refetchData = await fetchAppData(password);
+      const refetchData = await fetchItemData(currentItem);
 
       const filteredParticipants = refetchData.participants.filter(
-        (participant) => !deletedParticipantIds.includes(participant.id)
+        (participant) => !deletedParticipantIds.includes(participant.id),
       );
       const filteredPayments = refetchData.payments.filter((refetched) => {
         const payment = payments.find((p) => p.id === refetched.id);
-
-        if (JSON.stringify(payment) !== JSON.stringify(refetched)) {
-          console.log("Payment changed", payment, refetched);
-        }
 
         return (
           !deletedPaymentIds.includes(refetched.id) &&
@@ -81,14 +83,15 @@ const DynamicDebts: React.FC = () => {
       const participantsDiff = participants.filter(
         (participant) =>
           !filteredParticipants.some(
-            (refetchedParticipant) => refetchedParticipant.id === participant.id
-          )
+            (refetchedParticipant) =>
+              refetchedParticipant.id === participant.id,
+          ),
       );
       const paymentsDiff = payments.filter(
         (payment) =>
           !filteredPayments.some(
-            (refetchedPayment) => refetchedPayment.id === payment.id
-          )
+            (refetchedPayment) => refetchedPayment.id === payment.id,
+          ),
       );
 
       const mergedParticipants = [...filteredParticipants, ...participantsDiff];
@@ -103,7 +106,7 @@ const DynamicDebts: React.FC = () => {
 
       mergedPayments.forEach((payment) => {
         const payerIndex = mergedParticipants.findIndex(
-          (participant) => participant.id === payment.payer
+          (participant) => participant.id === payment.payer,
         );
         const paymentAmount = parseFloat(payment.amount);
 
@@ -144,7 +147,7 @@ const DynamicDebts: React.FC = () => {
 
       setParticipantTransactions(mappedTransactions);
 
-      await updateAppData(
+      await updateItemData(
         {
           participantTransactions: mappedTransactions,
           participants: mergedParticipants,
@@ -152,7 +155,8 @@ const DynamicDebts: React.FC = () => {
           deletedParticipantIds,
           deletedPaymentIds,
         },
-        password
+        password,
+        currentItem,
       );
 
       alert("Debts settled successfully");
@@ -170,7 +174,9 @@ const DynamicDebts: React.FC = () => {
 
   const removePayment = (index: number) => {
     if (payments.length > 0) {
-      setDeletedPaymentIds([...deletedPaymentIds, payments[index].id]);
+      const filteredDeletedPayments =
+        filterOldPaymentsOrParticipants(deletedPaymentIds);
+      setDeletedPaymentIds([...filteredDeletedPayments, payments[index].id]);
       setPayments(payments.filter((_, i) => i !== index));
     }
   };
@@ -194,7 +200,7 @@ const DynamicDebts: React.FC = () => {
                   className="p-2 rounded-md h-10 border-r-4 border-x-white w-full"
                 >
                   <option value="">Select Participant</option>
-                  {participants.map((participant) => (
+                  {participants?.map((participant) => (
                     <option key={participant.id} value={participant.id}>
                       {participant.name}
                     </option>
@@ -227,7 +233,7 @@ const DynamicDebts: React.FC = () => {
                     handlePaymentChange(
                       index,
                       "splitAmongAll",
-                      e.target.checked
+                      e.target.checked,
                     )
                   }
                 />
@@ -236,7 +242,7 @@ const DynamicDebts: React.FC = () => {
             </div>
             {!payment.splitAmongAll && (
               <div className="flex flex-wrap gap-2">
-                {participants.map((participant) => (
+                {participants?.map((participant) => (
                   <label
                     key={participant.id}
                     className="flex items-center gap-2"
@@ -244,7 +250,7 @@ const DynamicDebts: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={payment.selectedParticipants.includes(
-                        participant.id
+                        participant.id,
                       )}
                       onChange={() =>
                         handleParticipantSelection(index, participant.id)

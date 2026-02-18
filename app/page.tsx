@@ -1,11 +1,12 @@
 "use client";
 
-import DynamicForm from "@/components/DynamicForm";
+import App from "@/components/App";
+import { AppProvider } from "./context";
 
 export default function Home() {
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start p-6">
-      <DynamicForm />
-    </main>
+    <AppProvider>
+      <App />
+    </AppProvider>
   );
 }
