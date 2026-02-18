@@ -6,7 +6,9 @@ import { AppProvider } from "./context";
 export default function Home() {
   return (
     <AppProvider>
-      <App />
+      <main>
+        <App />
+      </main>
     </AppProvider>
   );
 }
