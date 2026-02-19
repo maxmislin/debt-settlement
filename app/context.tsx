@@ -165,8 +165,3 @@ export const useAppContext = (): AppContextType => {
   }
   return context;
 };
-
-// TODO: Need to implement logic that would call update requests to re-save data in 1 min range
-// Use case -> update called -> timer starts
-// user creates new item -> call update -> timer < min ? set update flag to true -> call update after timer reach 1 min if flag is set to true
-// Maybe add visual notice that app data will be saved after...
