@@ -18,10 +18,12 @@ type ItemData = {
   payments: Payment[];
   deletedParticipantIds: string[];
   deletedPaymentIds: string[];
+  status?: number;
 };
 
-type AppData = {
+export type AppData = {
   items: Item[];
+  updatedAt: string;
 };
 
 type CreateItemResponse = {
@@ -40,13 +42,21 @@ export const fetchAppData = async (password: string): Promise<AppData> => {
   const itemId = CryptoJS.AES.decrypt(ENCRYPTED_ITEM_ID, password).toString(
     CryptoJS.enc.Utf8,
   );
+  const apiKey = CryptoJS.AES.decrypt(
+    ENCRYPTED_ENDPOINT_API_KEY,
+    password,
+  ).toString(CryptoJS.enc.Utf8);
 
-  const response = await fetch(`${EDNPOINT_URL}/v1/json/${itemId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${EDNPOINT_URL}/v1/json/${itemId}?apiKey=${apiKey}`,
+    {
+      method: "GET",
+      headers: {
+        "Cache-Control": "no-cache",
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   return response.json();
 };

@@ -9,6 +9,7 @@ import React, {
 import { filterOldPaymentsOrParticipants } from "@/utils/filterOldPayments";
 import { fetchItemData } from "@/query/appData";
 import { useAppContext } from "@/app/context";
+import { useRouter } from "next/navigation";
 
 export type Participant = {
   id: string;
@@ -53,7 +54,7 @@ const ParticipantsContext = createContext<ParticipantsContextType | undefined>(
 );
 
 export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
-  const { currentItem } = useAppContext();
+  const { currentItem, setCurrentItem } = useAppContext();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantTransactions, setParticipantTransactions] = useState<
     ParticipantTransaction[]
@@ -64,6 +65,7 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
   );
   const [deletedPaymentIds, setDeletedPaymentIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const addParticipant = (participant: Participant) => {
     setParticipants((prevParticipants) => [...prevParticipants, participant]);
@@ -89,6 +91,11 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const data = await fetchItemData(currentItem);
 
+      if (data?.status === 404) {
+        setCurrentItem(null);
+        router.replace(window.location.pathname);
+      }
+
       if (data) {
         setParticipants(data.participants);
         setPayments(data.payments);
@@ -101,7 +108,7 @@ export const ParticipantsProvider = ({ children }: { children: ReactNode }) => {
       alert("Failed to load item data");
     }
     setIsLoading(false);
-  }, [currentItem]);
+  }, [currentItem, setCurrentItem, router]);
 
   useEffect(() => {
     loadItemData();
