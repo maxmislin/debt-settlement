@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { fetchAppData } from "@/query/appData";
+import { fetchAppData, updateAppData } from "@/query/appData";
 import {
   getLocalStoragePassword,
   setLocalStoragePassword,
@@ -28,6 +28,10 @@ type AppContextType = {
   setItems: (items: Item[]) => void;
   currentItem: string | null;
   setCurrentItem: (itemId: string | null) => void;
+  timerTarget: number | null;
+  isUpdatePending: boolean;
+  updateApp: (data: { items: Item[] }) => Promise<void>;
+  showSaveConfirmation: boolean;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -44,6 +48,57 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return getLocalStoragePassword() || "";
   });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isUpdatePending, setIsUpdatePending] = useState(false);
+  const [timerTarget, setTimerTarget] = useState<number | null>(null);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+
+  const isUpdatePendingRef = React.useRef(isUpdatePending);
+  const itemsRef = React.useRef(items);
+
+  useEffect(() => {
+    isUpdatePendingRef.current = isUpdatePending;
+  }, [isUpdatePending]);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  const updateApp = useCallback(
+    async (data: { items: Item[] }) => {
+      await updateAppData(
+        {
+          ...data,
+          updatedAt: new Date().toISOString(),
+        },
+        password,
+      );
+
+      if (!timerTarget) {
+        const target = Date.now() + 30000;
+        setTimerTarget(target);
+        setTimeout(async () => {
+          // Use refs to get latest values
+          if (isUpdatePendingRef.current) {
+            try {
+              await updateApp({ items: itemsRef.current });
+
+              setShowSaveConfirmation(true);
+              setTimeout(() => setShowSaveConfirmation(false), 3000); // Hide after 3s
+            } catch {
+              alert("Failed to update app");
+            }
+            setIsUpdatePending(false);
+            setTimerTarget(Date.now() + 30000);
+          } else {
+            setTimerTarget(null);
+          }
+        }, 30000);
+      } else {
+        setIsUpdatePending(true);
+      }
+    },
+    [password, timerTarget],
+  );
 
   const loadPrivateData = useCallback(async () => {
     if (isAuthenticated || isFetching) {
@@ -92,6 +147,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setItems,
         currentItem,
         setCurrentItem,
+        updateApp,
+        timerTarget,
+        isUpdatePending,
+        showSaveConfirmation,
       }}
     >
       {children}
@@ -106,3 +165,8 @@ export const useAppContext = (): AppContextType => {
   }
   return context;
 };
+
+// TODO: Need to implement logic that would call update requests to re-save data in 1 min range
+// Use case -> update called -> timer starts
+// user creates new item -> call update -> timer < min ? set update flag to true -> call update after timer reach 1 min if flag is set to true
+// Maybe add visual notice that app data will be saved after...

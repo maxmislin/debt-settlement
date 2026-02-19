@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  deleteItem,
-  updateItemData,
-  emptyItemTemplate,
-  updateAppData,
-} from "@/query/appData";
+import { deleteItem, updateItemData, emptyItemTemplate } from "@/query/appData";
 import { useAppContext } from "@/app/context";
 import { useParticipantContext } from "../context";
 import { useRouter } from "next/navigation";
@@ -13,7 +8,8 @@ const ActionButtons = ({ currentItem }: { currentItem: string }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { password, setCurrentItem, items, setItems } = useAppContext();
+  const { password, setCurrentItem, items, setItems, updateApp } =
+    useAppContext();
   const { loadItemData } = useParticipantContext();
   const router = useRouter();
 
@@ -37,11 +33,11 @@ const ActionButtons = ({ currentItem }: { currentItem: string }) => {
     const newItems = items.filter((item) => item.id !== currentItem);
 
     try {
-      await updateAppData({ items: newItems }, password);
+      await updateApp({ items: newItems });
       setItems(newItems);
     } catch (e) {
       console.error(e);
-      alert("Failed to reset item");
+      alert("Failed to delete item");
       return;
     } finally {
       setIsLoading(false);
@@ -56,7 +52,7 @@ const ActionButtons = ({ currentItem }: { currentItem: string }) => {
       router.replace(window.location.pathname);
     } catch (e) {
       console.error(e);
-      alert("Failed to reset item");
+      alert("Failed to delete item");
       return;
     } finally {
       setIsLoading(false);

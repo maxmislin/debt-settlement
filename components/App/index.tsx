@@ -7,12 +7,9 @@ import SidebarDrawer from "@/components/Sidebar/SidebarDrawer";
 import Loader from "../Loader";
 import Auth from "../DynamicForm/Auth";
 import { useAppContext } from "@/app/context";
-import {
-  createItemData,
-  updateAppData,
-  emptyItemTemplate,
-} from "@/query/appData";
+import { createItemData, emptyItemTemplate } from "@/query/appData";
 import { useSearchParams, useRouter } from "next/navigation";
+import TimerDisplay from "../TimerDisplay";
 
 export default function App() {
   const {
@@ -23,6 +20,8 @@ export default function App() {
     isAuthenticated,
     currentItem,
     setCurrentItem,
+    updateApp,
+    isUpdatePending,
   } = useAppContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -56,7 +55,7 @@ export default function App() {
 
     setIsLoading(true);
     try {
-      await updateAppData({ items: newItems }, password);
+      await updateApp({ items: newItems });
     } catch (e) {
       console.error(e);
       alert("Failed to update app data");
@@ -88,6 +87,8 @@ export default function App() {
 
   return (
     <div className="flex h-screen">
+      <TimerDisplay />
+
       {/* Sidebar for desktop */}
       <Sidebar
         items={items}
@@ -130,7 +131,9 @@ export default function App() {
       />
 
       {/* Main content */}
-      <main className="flex-1 w-full ml-0 md:ml-64 p-6 pt-16 md:pt-6">
+      <main
+        className={`flex-1 w-full ml-0 md:ml-64 p-6 ${isUpdatePending ? "pt-32" : "pt-16"} md:pt-6`}
+      >
         <section className="flex flex-col items-center sm:items-start">
           <DynamicForm />
         </section>
